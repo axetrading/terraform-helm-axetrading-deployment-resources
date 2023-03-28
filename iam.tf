@@ -32,7 +32,7 @@ resource "aws_iam_role" "this" {
   count = var.create_role ? 1 : 0
 
   name        = var.role_name
-  name_prefix = module.short-name[0].result
+  name_prefix = var.role_name == null && var.role_name_prefix != null ? module.short-name[0].result : null
   path        = var.role_path
   description = var.role_description
 
@@ -91,7 +91,7 @@ data "aws_iam_policy_document" "secrets" {
 resource "aws_iam_policy" "secrets" {
   count = var.create_role ? 1 : 0
 
-  name_prefix = "${var.policy_name_prefix}Secrets_Policy-"
+  name_prefix = "${var.policy_name_prefix}-secrets-policy-"
   path        = var.role_path
   description = "Provides permissions for IRSA attached to a kubernetes SA to get secrets from AWS SSM and AWS Secrets Manager"
   policy      = data.aws_iam_policy_document.secrets[0].json
