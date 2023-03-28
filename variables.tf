@@ -19,7 +19,7 @@ variable "create_role" {
 variable "existing_role_arn" {
   type        = string
   description = "The ARN of an existing IAM role to be used for this deployment."
-  default = null
+  default     = null
 }
 
 variable "tfstate_s3_bucket" {
