@@ -1,7 +1,3 @@
-locals {
-  irsa_name        = var.role_name != null ? format("%s-%s", var.role_name, "irsa") : null
-  irsa_name_prefix = var.role_name_prefix != null ? format("%s-%s", var.role_name_prefix, "irsa") : null
-}
 data "aws_iam_policy_document" "this" {
   count = var.create_role ? 1 : 0
 
@@ -35,7 +31,7 @@ data "aws_iam_policy_document" "this" {
 resource "aws_iam_role" "this" {
   count = var.create_role ? 1 : 0
 
-  name        = local.irsa_name
+  name        = var.role_name
   name_prefix = module.short-name[0].result
   path        = var.role_path
   description = var.role_description
@@ -56,12 +52,13 @@ resource "aws_iam_role_policy_attachment" "this" {
 }
 
 module "short-name" {
-  count      = local.irsa_name_prefix != null ? 1 : 0
+  count      = var.role_name_prefix != null ? 1 : 0
   source     = "axetrading/short-name/null"
   version    = "1.0.0"
   max_length = 38
-  value      = local.irsa_name_prefix
+  value      = var.role_name_prefix
 }
+
 #### Secrets 
 
 data "aws_iam_policy_document" "secrets" {
