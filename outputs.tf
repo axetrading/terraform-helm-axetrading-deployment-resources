@@ -1,44 +1,30 @@
-output "namespace_name" {
-  value       = kubernetes_namespace.this.metadata[0].name
-  description = "The name of the Kubernetes namespace created by the 'kubernetes_namespace' resource."
+
+output "iam_role_arn" {
+  description = "ARN of IAM role"
+  value       = try(aws_iam_role.this[0].arn, "")
 }
 
-output "role_name" {
-  value       = kubernetes_role.this.metadata[0].name
-  description = "The name of the Kubernetes role created by the 'kubernetes_role' resource."
+output "helm_release_id" {
+  value       = helm_release.main.id
+  description = "Helm Release ID"
 }
 
-output "role_binding_name" {
-  value       = kubernetes_role_binding.this.metadata[0].name
-  description = "The name of the Kubernetes role binding created by the 'kubernetes_role_binding' resource."
+output "helm_release_name" {
+  value       = helm_release.main.name
+  description = "Helm Release Name"
 }
 
-output "service_account_name" {
-  value       = kubernetes_service_account.this.metadata[0].name
-  description = "The name of the Kubernetes service account."
+output "helm_release_namespace" {
+  value       = helm_release.main.namespace
+  description = "Helm Release Namespace"
 }
 
-output "config_map_name" {
-  value       = kubernetes_config_map.this.metadata[0].name
-  description = "The name of the Kubernetes config map."
+output "helm_release_status" {
+  value       = helm_release.main.status
+  description = "Helm Release Status"
 }
 
-output "irsa_name" {
-  value       = aws_iam_role.this[0].name
-  description = "The name of the AWS IAM role."
-}
-
-output "secrets_policy_arn" {
-  value       = aws_iam_policy.secrets[0].arn
-  description = "The ARN of the AWS IAM policy created by the 'aws_iam_policy' resource for accessing AWS Secrets Manager and AWS SSM."
-}
-
-output "dynamodb_policy_arn" {
-  value       = aws_iam_policy.dynamodb[0].arn
-  description = "The ARN of the AWS IAM policy created by the 'aws_iam_policy' resource for accessing DynamoDB."
-}
-
-output "s3_policy_arn" {
-  value       = aws_iam_policy.s3[0].arn
-  description = "The ARN of the AWS IAM policy created by the 'aws_iam_policy' resource for accessing S3."
+output "helm_release_values" {
+  value       = helm_release.main.values
+  description = "Helm Release Values"
 }

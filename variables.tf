@@ -1,14 +1,37 @@
+variable "atomic" {
+  type        = bool
+  description = "If set, the installation process purges the chart on failure. The wait flag will be set automatically if atomic is used."
+  default     = false
+}
+
+variable "create_namespace" {
+  type        = bool
+  description = "If set, Terraform will create the namespace if it does not yet exist."
+  default     = false
+}
+
 variable "name" {
   type        = string
-  description = "The name of the K8S deployment lambda and its resources"
+  description = "The name of the Helm deployment."
 }
 
 variable "namespace" {
   type        = string
-  description = "Kubernetes namespace"
+  description = "The namespace to install the release into."
   default     = "default"
 }
 
+variable "timeout" {
+  type        = number
+  description = "The time, in seconds, that Terraform will wait for a Helm release to create resources."
+  default     = 150
+}
+
+variable "wait" {
+  type        = bool
+  description = "If set, Terraform will wait for the Helm release to complete before continuing."
+  default     = true
+}
 
 variable "create_role" {
   type        = bool
@@ -109,9 +132,9 @@ variable "role_policy_arns" {
 
 
 variable "secrets" {
-  description = "List of secret that will be used by the SecretsStore."
-  type        = list(string)
-  default     = []
+  type        = list(any)
+  description = "A list of AWS Secret Manager Secrets that will be mounted as volumes on your containers"
+  default     = null
 }
 
 variable "env_vars" {
@@ -124,4 +147,10 @@ variable "assume_role_condition_test" {
   description = "Name of the [IAM condition operator](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_condition_operators.html) to evaluate when assuming the role"
   type        = string
   default     = "StringEquals"
+}
+
+variable "create_service_account" {
+  type        = bool
+  description = "Whether to create a service account for Kubernetes Deployment"
+  default     = true
 }
