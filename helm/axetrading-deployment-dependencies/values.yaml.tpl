@@ -52,13 +52,13 @@ terraformUpdateConfigmap:
     export TF_CLI_CHDIR="$dir"
     . $dir/utils/utils.sh
     ### looking for secrets in /mnt/secrets directory
-    jq -s 'reduce .[] as $item ({}; . * $item)' /mnt/secrets/* > terraform/terraform.tfvars.json
+    jq -s 'reduce .[] as $item ({}; . * $item)' "/mnt/secrets/*" > terraform/terraform.tfvars.json
     ### initialise the workspace
     initialise_terraform_workspace $TFSTATE_BUCKET $TFLOCKS_TABLE $REPO_NAME $WORKSPACE
     ### running terraform plan with detailed exit code.
-    terraform_exec plan \
+    terraform plan \
         -var name="$REPO_NAME" \
         -var image_repository="$IMAGE_REPOSITORY" \
         -var image_tag="$IMAGE_TAG" \
         -out=plan
-    terraform_exec apply plan
+    terraform apply plan
