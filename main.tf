@@ -9,6 +9,7 @@ resource "helm_release" "main" {
 
   values = [
     templatefile("${path.module}/helm/axetrading-deployment-dependencies/values.yaml.tpl", {
+      fullNameOverride     = var.name
       awsSecrets           = var.secrets
       createServiceAccount = var.create_service_account
       }
