@@ -3,6 +3,19 @@ serviceAccount:
   annotations: {}
   name: ""
 
+secretsStore:
+  %{~ if awsSecrets != null ~}
+  enabled: true
+  provider: aws
+  awsSecrets:
+    %{~ for secret in awsSecrets ~}
+    - ${secret}
+    %{~ endfor ~}
+  %{~ endif ~}
+  %{~ if awsSecrets == null ~}
+  enabled: false
+  %{~ endif ~}
+
 terraformUpdateConfigmap:
   deploySh: |-
     #!/bin/bash
