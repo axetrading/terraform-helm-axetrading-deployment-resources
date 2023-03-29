@@ -1,3 +1,6 @@
+nameOverride: ""
+fullnameOverride: ${fullNameOverride}
+
 serviceAccount:
   create: ${createServiceAccount}
   annotations: {}
