@@ -1,4 +1,4 @@
-formatter: markdown
+formatter: pretty
 
 output:
   file: "README.md"
