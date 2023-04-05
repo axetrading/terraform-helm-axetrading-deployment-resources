@@ -10,7 +10,7 @@ secretsStore:
   %{~ if awsSecrets != null ~}
   enabled: true
   provider: aws
-  awsSecrets:
+  secretProviderClasses:
     %{~ for secret in awsSecrets ~}
     - ${secret}
     %{~ endfor ~}
