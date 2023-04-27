@@ -23,57 +23,74 @@ terraformUpdateConfigmap:
   deploySh: |-
     #!/bin/bash
     set -eo pipefail
-    while getopts ":w:i:t:" opt; do
+    DRY_RUN=false
+    while getopts \":workspace:image:tag:dry-run\" opt; do
       case $opt in
-        w)
-          WORKSPACE="$OPTARG"
+        workspace)
+          WORKSPACE=\"$OPTARG\"
           ;;
-        i)
-          IMAGE_REPOSITORY="$OPTARG"
+        image)
+          IMAGE_REPOSITORY=\"$OPTARG\"
           ;;
-        t)
-          IMAGE_TAG="$OPTARG"
+        tag)
+          IMAGE_TAG=\"$OPTARG\"
           ;;
-        \?)
-          echo "Invalid option: -$OPTARG" >&2
+        dry-run)
+          DRY_RUN=true
+          ;;
+        \\?)
+          echo \"Invalid option: -$OPTARG\" >&2
           exit 1
           ;;
         :)
-          echo "Option -$OPTARG requires an argument." >&2
+          echo \"Option -$OPTARG requires an argument.\" >&2
           exit 1
           ;;
       esac
     done
-
-    if [[ -z "$WORKSPACE" || -z "$IMAGE_REPOSITORY" || -z "$IMAGE_TAG" ]]; then
-        echo "Usage: $0 -w <workspace> -i <image_repository> -t <image_tag>"
+    
+    if [[ -z \"$WORKSPACE\" || -z \"$IMAGE_REPOSITORY\" || -z \"$IMAGE_TAG\" ]]; then
+        echo \"Usage: $0 --workspace <workspace> --image <image_repository> --tag <image_tag>\"
         exit 1
     fi
-
-    ### Download Deployment Package from S3
-    echo "Downloading Deployment Package from S3..."
+    
+    echo \"Downloading Deployment Package from S3...\"
     aws s3 cp s3://$ARTIFACT_LOCATION/$REPO_NAME/$IMAGE_TAG/deployment.zip .
     unzip -q deployment.zip
-
-    dir="terraform"
-    export TF_CLI_CHDIR="$dir"
-    . $dir/utils/utils.sh
-
-    ### looking for secrets in /mnt/secrets directory
-    echo "Reading secrets from /mnt/secrets directory..."
+    
+    dir=\"terraform\"
+    export TF_CLI_CHDIR=\"$dir\"
+    export FIRST_RUN=1
+    . $dir/utils/k8s-job-utils.sh
+    
+    echo \"Reading secrets from /mnt/secrets directory...\"
     jq -s 'reduce .[] as $item ({}; . * $item)' /mnt/secrets/* > terraform/terraform.tfvars.json
-
-    ### initialise the workspace
-    echo "Initialising Terraform workspace..."
+    
+    echo \"Appending secrets from terraform/environments/$WORKSPACE.tfvars.json to terraform/terraform.tfvars.json...\"
+    jq -s '.[0] + .[1]' terraform/terraform.tfvars.json \"terraform/environments/$WORKSPACE.tfvars.json\" > temp.json && mv temp.json terraform/terraform.tfvars.json
+    
+    echo \"Initialising Terraform workspace...\"
     initialise_terraform_workspace $TFSTATE_BUCKET $TFLOCKS_TABLE $REPO_NAME $WORKSPACE
-
-    ### running terraform plan with detailed exit code.
-    echo "Running Terraform plan..."
-    terraform plan \
-        -var name="$REPO_NAME" \
-        -var image_repository="$IMAGE_REPOSITORY" \
-        -var image_tag="$IMAGE_TAG" \
+    
+    echo \"Running Terraform plan...\"
+    if [ \"$DRY_RUN\" = true ]; then
+      terraform -chdir=$TF_CLI_CHDIR plan \\
+      \t-var name=\"$REPO_NAME\" \\
+        -var image_repository=\"$IMAGE_REPOSITORY\" \\
+        -var image_tag=\"$IMAGE_TAG\" \\
+      -detailed-exitcode
+    else
+      terraform -chdir=$TF_CLI_CHDIR plan \\
+        -var name=\"$REPO_NAME\" \\
+        -var image_repository=\"$IMAGE_REPOSITORY\" \\
+        -var image_tag=\"$IMAGE_TAG\" \\
         -out=plan
-
-    echo "Applying Terraform plan..."
-    terraform apply plan
+    fi
+    
+    echo \"Applying Terraform plan...\"
+    
+    if [ \"$DRY_RUN\" = true ]; then
+      echo \"Dry run: Terraform apply skipped\"
+    else
+      terraform -chdir=$TF_CLI_CHDIR apply plan
+    fi
