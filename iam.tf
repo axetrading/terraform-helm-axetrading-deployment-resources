@@ -208,3 +208,34 @@ resource "aws_iam_role_policy_attachment" "s3" {
   role       = aws_iam_role.this[0].name
   policy_arn = aws_iam_policy.s3[0].arn
 }
+
+# STS
+
+data "aws_iam_policy_document" "sts" {
+  count = var.create_role ? 1 : 0
+
+  statement {
+    actions = [
+      "sts:*",
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "sts" {
+  count = var.create_role ? 1 : 0
+
+  name_prefix = "${var.policy_name_prefix}-sts-policy-"
+  path        = var.role_path
+  description = "Provides permissions for STS actions"
+  policy      = data.aws_iam_policy_document.sts[0].json
+
+  tags = var.tags
+}
+
+resource "aws_iam_role_policy_attachment" "sts" {
+  count = var.create_role ? 1 : 0
+
+  role       = aws_iam_role.this[0].name
+  policy_arn = aws_iam_policy.sts[0].arn
+}
