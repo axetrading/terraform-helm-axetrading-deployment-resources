@@ -24,33 +24,19 @@ terraformUpdateConfigmap:
     #!/bin/bash
     set -eo pipefail
     DRY_RUN=false
-    while getopts \":workspace:image:tag:dry-run\" opt; do
-      case $opt in
-        workspace)
-          WORKSPACE=\"$OPTARG\"
-          ;;
-        image)
-          IMAGE_REPOSITORY=\"$OPTARG\"
-          ;;
-        tag)
-          IMAGE_TAG=\"$OPTARG\"
-          ;;
-        dry-run)
-          DRY_RUN=true
-          ;;
-        \\?)
-          echo \"Invalid option: -$OPTARG\" >&2
-          exit 1
-          ;;
-        :)
-          echo \"Option -$OPTARG requires an argument.\" >&2
-          exit 1
-          ;;
+    while [[ "$#" -gt 0 ]]; do
+      case $1 in
+          -workspace) WORKSPACE="$2"; shift ;;
+          -image) IMAGE_REPOSITORY="$2"; shift ;;
+          -tag) IMAGE_TAG="$2"; shift ;;
+          -dry-run) DRY_RUN=true ;;
+          *) echo "Unknown parameter passed: $1"; exit 1 ;;
       esac
+      shift
     done
     
     if [[ -z \"$WORKSPACE\" || -z \"$IMAGE_REPOSITORY\" || -z \"$IMAGE_TAG\" ]]; then
-        echo \"Usage: $0 --workspace <workspace> --image <image_repository> --tag <image_tag>\"
+        echo \"Usage: $0 -workspace <workspace> -image <image_repository> -tag <image_tag>\"
         exit 1
     fi
     
