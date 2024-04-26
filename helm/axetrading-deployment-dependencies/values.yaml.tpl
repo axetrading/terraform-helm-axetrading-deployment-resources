@@ -44,8 +44,8 @@ terraformUpdateConfigmap:
     aws s3 cp s3://$ARTIFACT_LOCATION/$REPO_NAME/$IMAGE_TAG/deployment.zip .
     unzip -q deployment.zip
     
-    dir=\"terraform\"
-    export TF_CLI_CHDIR=\"$dir\"
+    dir=terraform
+    export TF_CLI_CHDIR=$dir
     export FIRST_RUN=1
     . $dir/utils/k8s-job-utils.sh
     
@@ -53,29 +53,29 @@ terraformUpdateConfigmap:
     jq -s 'reduce .[] as $item ({}; . * $item)' /mnt/secrets/* > terraform/terraform.tfvars.json
     
     echo \"Appending secrets from terraform/environments/$WORKSPACE.tfvars.json to terraform/terraform.tfvars.json...\"
-    jq -s '.[0] + .[1]' terraform/terraform.tfvars.json \"terraform/environments/$WORKSPACE.tfvars.json\" > temp.json && mv temp.json terraform/terraform.tfvars.json
+    jq -s '.[0] + .[1]' terraform/terraform.tfvars.json terraform/environments/$WORKSPACE.tfvars.json > temp.json && mv temp.json terraform/terraform.tfvars.json
     
     echo \"Initialising Terraform workspace...\"
     initialise_terraform_workspace $TFSTATE_BUCKET $TFLOCKS_TABLE $REPO_NAME $WORKSPACE
     
     echo \"Running Terraform plan...\"
-    if [ \"$DRY_RUN\" = true ]; then
-      terraform -chdir=$TF_CLI_CHDIR plan \\
-      \t-var name=\"$REPO_NAME\" \\
-        -var image_repository=\"$IMAGE_REPOSITORY\" \\
-        -var image_tag=\"$IMAGE_TAG\" \\
+    if [ $DRY_RUN = true ]; then
+      terraform -chdir=$TF_CLI_CHDIR plan \
+        -var name=$REPO_NAME \
+        -var image_repository=$IMAGE_REPOSITORY \
+        -var image_tag=$IMAGE_TAG \
       -detailed-exitcode
     else
-      terraform -chdir=$TF_CLI_CHDIR plan \\
-        -var name=\"$REPO_NAME\" \\
-        -var image_repository=\"$IMAGE_REPOSITORY\" \\
-        -var image_tag=\"$IMAGE_TAG\" \\
+      terraform -chdir=$TF_CLI_CHDIR plan \
+        -var name=$REPO_NAME \
+        -var image_repository=$IMAGE_REPOSITORY \
+        -var image_tag=$IMAGE_TAG \
         -out=plan
     fi
     
     echo \"Applying Terraform plan...\"
     
-    if [ \"$DRY_RUN\" = true ]; then
+    if [ $DRY_RUN = true ]; then
       echo \"Dry run: Terraform apply skipped\"
     else
       terraform -chdir=$TF_CLI_CHDIR apply plan
