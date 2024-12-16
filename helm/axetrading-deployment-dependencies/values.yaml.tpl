@@ -36,9 +36,6 @@ terraformUpdateConfigmap:
       esac
       shift
     done
-    echo $WORKSPACE
-    echo $IMAGE_REPOSITORY
-    echo $IMAGE_TAG
     if [[ -z \"$WORKSPACE\" || -z \"$IMAGE_REPOSITORY\" || -z \"$IMAGE_TAG\" ]]; then
         echo \"Usage: $0 -workspace <workspace> -image <image_repository> -tag <image_tag>\"
         exit 1
