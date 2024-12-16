@@ -24,6 +24,8 @@ terraformUpdateConfigmap:
     #!/bin/bash
     set -eo pipefail
     DRY_RUN=false
+    eval $(ssh-agent)
+    echo "$SSH_AUTH_KEY" | ssh-add -
     while [[ "$#" -gt 0 ]]; do
       case $1 in
           -workspace) WORKSPACE="$2"; shift ;;
